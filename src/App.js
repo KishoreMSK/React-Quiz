@@ -6,6 +6,9 @@ import Error from './Error'
 import StartScreen from './StartScreen'
 import Questions from './Questions'
 import Progress from './Progress'
+import FinishScreen from './FinishScreen'
+import NextButton from './NextButton'
+import Timer from './Timer'
 
 const initialState = {
   questions:[],
@@ -13,8 +16,11 @@ const initialState = {
   status: 'loading',
   index: 0,
   answer:null,
-  points: 0
+  points: 0,
+  highScore: 0,
+  secondsRemaining: null
 }
+const Secs_Per_Ques = 30;
 
 function reducer(state,action){
   switch(action.type){
@@ -32,7 +38,8 @@ function reducer(state,action){
     case 'start':
       return{
         ...state,
-        status: 'active'
+        status: 'active',
+        secondsRemaining: state.questions.length * Secs_Per_Ques
       }
     case 'newAnswer':
       const question = state.questions.at(state.index);
@@ -50,6 +57,25 @@ function reducer(state,action){
         index: state.index + 1,
         answer: null
       }
+    case 'finish':
+      return {
+        ...state,
+        status: "finished",
+        highScore:
+          state.points > state.highScore ? state.points : state.highScore,
+      };
+    case 'restart':
+      return {
+        ...initialState,
+        questions: state.questions,
+        status: 'ready'
+      }
+    case 'tick':
+      return{
+        ...state,
+        secondsRemaining: state.secondsRemaining - 1,
+        status: state.secondsRemaining === 0 ? 'finished' : state.status
+      }
     default:
       throw new Error('Unknown action')
   }
@@ -57,7 +83,7 @@ function reducer(state,action){
 
 export default function App(){
   const [state,dispatch] = useReducer(reducer,initialState)
-  const {questions ,status, index, answer, points} = state;
+  const {questions ,status, index, answer, points, highScore, secondsRemaining} = state;
   const numQuestions = questions.length
   const maximumPossiblePoints = questions.reduce(
     (prev, cur) => prev + cur.points,0
@@ -99,6 +125,28 @@ export default function App(){
               dispatch={dispatch}
               answer={answer}
             />
+            <Timer dispatch={dispatch} secondsRemaining={secondsRemaining} />
+            <NextButton
+              dispatch={dispatch}
+              answer={answer}
+              index={index}
+              numQuestions={numQuestions}
+            />
+          </>
+        )}
+        {status === "finished" && (
+          <>
+            <FinishScreen
+              points={points}
+              maxPossiblePoints={maximumPossiblePoints}
+              highScore={highScore}
+            />
+            <button
+              className="btn btn-ui"
+              onClick={() => dispatch({ type: "restart" })}
+            >
+              Restart Test
+            </button>
           </>
         )}
       </Main>

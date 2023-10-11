@@ -1,3 +1,5 @@
+import NextButton from "./NextButton";
+
 export default function Options({ questions, dispatch, answer }) {
   console.log(answer);
   const hasAnswered = answer != null
@@ -22,14 +24,6 @@ export default function Options({ questions, dispatch, answer }) {
           </button>
         ))}
       </div>
-      {hasAnswered && (
-        <button
-          className="btn btn-ui"
-          onClick={() => dispatch({ type: "nextQuestion" })}
-        >
-          Next
-        </button>
-      )}
     </>
   );
 }
